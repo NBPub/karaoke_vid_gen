@@ -1,0 +1,15 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Per-song working folders (audio/video/timing artifacts) created at runtime
+songs/
+
+# Keep rendered clips off main — host them on GitHub Pages / Releases instead
+*.mp4

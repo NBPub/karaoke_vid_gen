@@ -1,0 +1,33 @@
+[project]
+name = "karaoke"
+version = "0.1.0"
+description = "Generate karaoke videos with synced word-fill lyrics"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "yt-dlp",
+    "mutagen",
+    "requests",
+    "click",
+    "soundfile",
+    "pillow",
+    # Model stack — required (separate/align/render all need these). The CUDA
+    # (GPU) build of torch/torchaudio is installed from the PyTorch index; see
+    # the install docs. Plain PyPI installs the CPU build (slow but functional).
+    "torch",
+    "torchaudio",
+    "demucs",
+    "openai-whisper",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+karaoke = "karaoke.cli:cli"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["karaoke*"]

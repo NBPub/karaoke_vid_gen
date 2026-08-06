@@ -1,0 +1,74 @@
+# config.toml — user-editable defaults (omit a key to use the built-in default)
+[render]
+width = 1920
+height = 1080
+fps = 30
+font_size = 48
+lines_per_page = 6
+# Per-word fill: the colour each letter sweeps to as it is sung (the "fill").
+fill_color = "#22D3EE"          # bright cyan — the active fill sweep
+past_color = "#2C7F93"          # darker cyan — already-sung lines
+# Wait bar during long instrumental gaps (intro, mid-song breaks, outro).
+wait_bar = true
+wait_min_gap_seconds = 10.0
+wait_bar_end_seconds = 1.0      # bar fills until this long before the next line
+wait_highlight_seconds = 3.0    # next line highlights this long before it starts
+# Which outputs to render: both | karaoke | review (review = full-audio copy only).
+mode = "review"
+# Video encoder: auto (NVENC if available, else libx264) | nvenc | libx264.
+video_codec = "auto"
+nvenc_cq = 23          # NVENC quality (lower = better/bigger), ~ x264 crf 23
+# Title card (artist / blank line / title) over the first title_seconds, fading
+# in/out. If singing starts before title_seconds + title_read_buffer_seconds, the
+# song is delayed so the singer gets that much read time first.
+title_card = true
+title_seconds = 3.0
+title_read_buffer_seconds = 2.0
+title_fade_seconds = 0.5
+# Persistent song progress bar down the right edge.
+progress_bar = true
+progress_fill_color = "#DD2C11"     # red fill
+progress_outline_color = "#22D3EE"  # cyan — matches the fill sweep
+# Count-in dots ("3-2-1") before the first line and any line after a gap of at
+# least count_in_min_gap_seconds (decoupled from the wait bar: shorter gaps get a
+# count-in but no instrumental-break wait bar).
+count_in = true
+count_in_min_gap_seconds = 5.0
+font_file = ""    # explicit TTF path; "" = auto (Segoe UI Bold -> Arial -> default)
+jobs = 0          # draw workers: 0 = all cores, 1 = serial
+# Fraction of frame width a lyric line may use before it's flagged too-wide and
+# `split` wraps it (shared by the preflight check and auto-split). 1.0 = exactly
+# the window; lower values demand an edge margin.
+usable_width_frac = 0.9
+
+[audio]
+bitrate = "320k"
+
+[align]
+# Back each word's start up to the true onset of its sound in the vocal stem
+# (Whisper marks starts slightly late). Only moves earlier, within the lookback.
+onset_snap = true
+onset_lookback_seconds = 0.25
+# Constant head-start of the lyric fill over the voice (karaoke anticipation).
+lead_seconds = 0.10
+# Whisper draws per align; keeps the one anchoring the most known words.
+# 1 = greedy only (fast). 3 is a good default; 5 squeezes a bit more from hard
+# (screamed/messy) songs at 5x the transcription time.
+best_of_n = 3
+# Padding (seconds) around the coarse start/end marks for `nudge --fill-cleared`,
+# i.e. how far the forced aligner searches around your guess.
+realign_search_margin_seconds = 1.0
+
+[models]
+demucs_model = "htdemucs"
+device = "cuda"
+# aligner: "whisper" (Whisper ASR + reconciliation, robust on choruses) or "mms" (single-pass CTC)
+aligner = "whisper"
+whisper_model = "medium"
+
+[history]
+# Per-song history.csv: each real operation (align / ab-keep / nudge / render)
+# appends a row recording model, seed, source, timing mtime, render mode,
+# GPU/CPU encoder, and op wall-time. The `ab` command's two renders log normal
+# render rows tagged notes=ab-gen. Set false to disable all logging.
+enabled = true

@@ -1,0 +1,15 @@
+{
+  "lines": [
+    {"words": [
+      {"text": "Twinkle", "start": 0.0, "end": 0.5},
+      {"text": "twinkle", "start": 0.5, "end": 1.0},
+      {"text": "little", "start": 1.0, "end": 1.4},
+      {"text": "star", "start": 1.5, "end": 2.6}
+    ]},
+    {"words": [
+      {"text": "How", "start": 3.0, "end": 3.3},
+      {"text": "I", "start": 3.3, "end": 3.6},
+      {"text": "wonder", "start": 3.6, "end": 4.2}
+    ]}
+  ]
+}

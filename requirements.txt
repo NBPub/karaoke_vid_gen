@@ -1,0 +1,26 @@
+# Karaoke Video Generator — runtime dependencies.
+#   pip install -r requirements.txt
+#
+# GPU (recommended): install torch + torchaudio FIRST from the CUDA-matched
+# PyTorch index, then this file. See docs/Installation.md#pytorch--cuda-gpu.
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+# A plain install of torch/torchaudio (below, or from PyPI) pulls the CPU build:
+# functional, but slow for separation and alignment.
+
+yt-dlp
+mutagen
+requests
+click
+soundfile
+pillow
+
+# Model stack. torch/torchaudio are unpinned so a plain install still works
+# (CPU build); for GPU, install them from the CUDA index first (see note above).
+torch
+torchaudio
+demucs
+openai-whisper
+
+# The `karaoke` command itself is installed from pyproject.toml:
+#   pip install -e .
+# Run the test suite with the dev extra:  pip install -e ".[dev]"  (pytest)
