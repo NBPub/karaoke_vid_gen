@@ -343,7 +343,10 @@ opening `timing.json`.
   - copy line `SRC`'s internal word timing onto line `DST` and place it starting at
     `T`. Useful for a repeated line (e.g. a chorus) one instance already nails.
     Repeatable.
-  - example: `--copy 12>40=2:15`.
+  - example (quote it in your shell): `karaoke nudge --copy "12>40=2:15"`. The `>`
+    is an output-redirect operator in PowerShell and bash, so an unquoted
+    `--copy 12>40=2:15` writes to a file named `40=2:15` and the command receives
+    only `12`.
 
 Both snap the given time to the nearest onset in the vocal stem; add `--no-snap`
 to use your time exactly as given.
