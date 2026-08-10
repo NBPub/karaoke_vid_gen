@@ -405,6 +405,7 @@ def test_check_line_widths_flags_only_overflowing_lines():
     assert len(fs) == 1 and fs[0].code == "line_too_wide"
     assert fs[0].severity == ERROR                                    # default blocks
     assert "extend past the video window" in fs[0].message
+    assert "karaoke split" in fs[0].message                            # suggests the fix
     assert any(c == "line 2: very long line" for c in fs[0].context)   # 1-indexed, full text
     assert all("line 1:" not in c for c in fs[0].context)              # short line not flagged
 

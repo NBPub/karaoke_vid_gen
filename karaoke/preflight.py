@@ -359,7 +359,8 @@ def check_line_widths(data, usable_width: float, measure,
         return []
     return [Finding(severity, "line_too_wide",
         "Line(s) detected that will extend past the video window, break up to "
-        "ensure all lyrics visible",
+        "ensure all lyrics visible. Edit lyric and timing files and/or use "
+        "\"karaoke split\".",
         context=[f"line {n}: {text}" for n, text in over])]
 
 
