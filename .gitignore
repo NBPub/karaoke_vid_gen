@@ -13,3 +13,6 @@ songs/
 
 # Keep rendered clips off main — host them on GitHub Pages / Releases instead
 *.mp4
+
+# Other
+docs_notes.txt
