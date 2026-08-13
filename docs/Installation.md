@@ -123,6 +123,11 @@ For other supported runtimes and details, see yt-dlp's
 
 *This is not needed if you only ingest local audio files.*
 
+**Keep yt-dlp current.** YouTube changes often and yt-dlp ships fixes to match, so
+a stale yt-dlp is the most common cause of extraction failures and `HTTP 403`
+errors. If a download fails, update it first: `pip install -U yt-dlp` (or, for the
+freshest fixes, the nightly `pip install -U --pre "yt-dlp[default]"`).
+
 ## Models
 
 No manual weight downloads are needed; each model fetches its weights on first
