@@ -7,6 +7,7 @@ Exploration of how the code is organized, with brief discussion and explanation 
 - [Data Flow](#data-flow)
 - [Module Map](#module-map)
 - [Design Notes](#design-notes)
+- [Audio format and flow](#audio-format-and-flow)
 - [Tests](#tests)
 
 ## Data Flow
@@ -48,6 +49,29 @@ Between them these cover every module in the package (`__init__.py` is just the 
 - **Pure logic is separated from I/O.** Timing math, fill interpolation, parsing, and config are pure and unit-tested; the heavy ML/network stages and rendering
   sit behind thin, mockable interfaces.
 - **The aligner is a swappable interface** ([Whisper](Models.md#alignment--two-approaches) vs [`MMS_FA`](Models.md#alignment--two-approaches)), which is what makes the A/B aligner comparison possible; rendering sits behind a small `Renderer` interface, too.
+
+## Audio format and flow
+
+The pipeline standardizes on **one lossless working format**: `song.flac` and the separated `instrumental.flac` / `vocals.flac`, all 44.1 kHz / 16-bit stereo. Every stage reads and writes the same thing, so no stage branches on format or stacks another lossy re-encode on the last.
+
+<details>
+<summary>Why one format, what YouTube provides, and the trade-off</summary>
+
+**Lossy vs lossless, briefly.** Lossy codecs (MP3, AAC, Opus) shrink audio by discarding detail you're unlikely to notice, and every re-encode discards a little more; lossless codecs (FLAC, WAV) compress with no loss, so re-saving costs nothing in quality. *Transcoding* is converting between codecs, and *bitrate* (kbps) is roughly the bits spent per second of audio: higher means more detail, but only up to the source's real fidelity.
+
+**What a source provides.** A YouTube pull is always lossy: the best audio-only stream is typically Opus around 130–160 kbps (or AAC ~130 kbps), with lower fallbacks (~50 kbps) also offered. That source is the fidelity ceiling: nothing downstream can add detail back. A local file is whatever you supply, lossy or lossless.
+
+**How audio moves through the stages.**
+- **acquire** decodes the source and re-encodes it once to `song.flac` (resampling to 44.1 kHz / 16-bit).
+- **separate** decodes `song.flac`, runs Demucs, and writes `instrumental.flac` + `vocals.flac`.
+- **align** decodes `vocals.flac` for the aligner: audio in, word timings out; the audio itself is not rewritten.
+- **render** muxes the chosen audio (instrumental, or full for the review copy) into the MP4, where it is encoded to AAC (`audio.bitrate`, default 320k) for broad playback.
+
+**Why a consistent format helps the code.** With every stage assuming the same container, rate, and bit depth: there is no per-stage format handling, the stems line up sample-for-sample with the source (which `no_extract` splicing and timing↔audio mapping rely on), and no accidental generation-loss creeps in between stages. FLAC is also the right default when the input is a lossless local rip.
+
+**The trade-off, and alternatives.** When the source is already lossy (a YouTube pull), `song.flac` is lossless-wrapping lossy audio: roughly 5–6× the source's bytes for no fidelity gain over it. For one song at a time that is negligible; across a large library it adds up, so deleting `song.flac` and the `_download/` scratch folder after the final render is reasonable (stages are cached and re-runnable). If storage mattered more, the alternatives would be to keep the source codec when it is already compact, make the working format / sample rate configurable, or decode on the fly instead of persisting stems: each trades disk space for more format-handling in the code or repeated decode work. The current design favors a simple, uniform, loss-free flow over disk size.
+
+</details>
 
 ## Tests
 

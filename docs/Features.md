@@ -26,6 +26,7 @@ earlier work is never repeated.
 
 ### Acquire
  - a URL or local file is normalized into `song.flac`; artist/title are resolved from the folder name (or embedded tags / source metadata) to seed the lyric search.
+ - on the audio format and how it moves through the stages: [Code → Audio format and flow](Code.md#audio-format-and-flow).
  
 ### Separate
  - audio file is [separated](Models.md#source-separation--demucs) into `instrumental.flac` + `vocals.flac`; or a user-supplied instrumental used as-is.

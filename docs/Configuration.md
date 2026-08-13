@@ -75,7 +75,7 @@ falls back to `libx264`; force one explicitly if needed.
 |-----|---------|--------------|
 | `bitrate` | `320k` | AAC audio bitrate in the final MP4. |
 
-**AAC in MP4** is the default because it's the broadly compatible pairing for H.264 video: it plays natively in browsers, media players, and the video sites these files usually end up on. `320k` is effectively transparent. Lowering it saves little next to the video stream, so it's worth doing only when the source audio is already below 320 kbps (common for YouTube rips, where the true audio bitrate is often lower than the reported one).
+**AAC in MP4** is the default because it's the broadly compatible pairing for H.264 video: it plays natively in browsers, media players, and the video sites these files usually end up on. `320k` is effectively transparent. Lowering it saves little next to the video stream, so it's worth doing only when the source audio is already below 320 kbps (common for YouTube rips, where the true audio bitrate is often lower than the reported one). For how audio is stored and flows through the pipeline stages, see [Code → Audio format and flow](Code.md#audio-format-and-flow).
 
 ## `[align]`
 

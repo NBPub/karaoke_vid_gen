@@ -78,7 +78,7 @@ karaoke acquire "Jonathan Coulton - Code Monkey" "path/to/Code Monkey.mp3"
 
 All commands here are run from the **project root** with the virtual environment activated. After this `acquire` step, the repeated `"Jonathan Coulton - Code Monkey"` option to commands would not be necessary if running them from the created song folder. 
 
-Downloads and saves as `song.flac`. A local download from the artist's site works the same way: pass the file path instead of the URL (the second form above). In this case the song file will simply be copied and the extension changed, if necessary.
+Downloads and saves as `song.flac`. A local download from the artist's site works the same way: pass the file path instead of the URL (the second form above). In this case the song file will simply be copied and the extension changed, if necessary. See [Code → Audio format and flow](Code.md#audio-format-and-flow) for how the audio is stored and flows through the pipeline.
 
 `acquire` creates the song folder at `<songs-dir>/Jonathan Coulton - Code Monkey/`
 — the songs directory is `songs/` by default (or `[paths].songs_dir` in [config](Configuration.md#configuration)) —

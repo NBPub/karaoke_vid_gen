@@ -214,7 +214,9 @@ then re-render with `--force`.
 
 Takes a URL (via `yt-dlp`) or a local file (MP3/FLAC/WAV/…) and produces
 `song.flac`. It resolves artist/title (from the folder name, embedded tags, or
-source metadata) to seed the lyric search.
+source metadata) to seed the lyric search. For what `song.flac` is and how the
+audio moves through the pipeline, see
+[Code → Audio format and flow](Code.md#audio-format-and-flow).
 
 ```bash
 karaoke acquire "Artist - Title" "https://www.youtube.com/watch?v=..."
