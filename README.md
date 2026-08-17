@@ -10,7 +10,8 @@ Provide an audio source (local file or YouTube URL) and song metadata, then auto
    - hand edit word timings as needed
    - utilize other [advanced features](docs/Features.md) for fine-tuning final karaoke video
 
-Live demo: [example clips and process highlights](https://nbpub.github.io/karaoke_vid_gen/), using Jonathan Coulton's "Code Monkey" as the example song.
+Read through the [documentation](/docs#documentation) for background details and usage guides. See a demonstration of results, with downloadable video, on the project [webpage](https://nbpub.github.io/karaoke_vid_gen/).
+
 
 | [Quickstart](#quickstart) | [Features](#feature-overview) | [AI Acknowledgement](#ai-acknowledgement) | [Contributing](#contributing) |
 

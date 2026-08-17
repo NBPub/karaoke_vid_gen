@@ -4,13 +4,11 @@ A freely-licensed song processed end to end: acquire → separate → lyrics →
 
 *A/B testing for aligners can be performed during the initial alignment, but was decided on after the fact in this case.*
 
-For a reference on any single command, see **[Usage](Usage.md#usage)**.
-
-The finished renders and clips from this walk-through are shown on the **[live demo page](https://nbpub.github.io/karaoke_vid_gen/)**.
+For a reference on any single command, see **[Usage](Usage.md#usage)**. The finished renders and clips from this walk-through are shown on the **[live demo page](https://nbpub.github.io/karaoke_vid_gen/)**.
 
 **Contents**
 - [Example Song and Introduction](#the-example-song)
-  - [History Log](#the-history-log)
+  - [History Log](#history-log)
 - [1. Acquire the audio](#1-acquire-the-audio)
 - [2. Separate the stems](#2-separate-the-stems)
 - [3. Get the lyrics](#3-get-the-lyrics)
