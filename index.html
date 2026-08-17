@@ -3,35 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Karaoke Video Generator — Code Monkey demo</title>
+<title>karaoke_vid_gen</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
 
   <header class="site-header">
-    <h1>Karaoke Video Generator</h1>
-    <p class="tagline">A Python CLI that turns a song into a karaoke video with
-      per-word synced, hand-editable lyric timing. This page shows the output on a
-      freely-licensed example: Jonathan Coulton — "Code Monkey."</p>
-    <p><a href="https://github.com/NBPub/karaoke_vid_gen">Repository &amp; docs →</a></p>
+    <h1 id="top">Karaoke Video Generator 
+	  <a class="gh-link" href="https://github.com/NBPub/karaoke_vid_gen#karaoke-video-generator" aria-label="GitHub repository" title="Repository and docs"><svg viewBox="0 0 16 16" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a>
+	</h1>
+    <p class="tagline">karaoke_vid_gen is a Python CLI that turns a song into a karaoke 
+      video with per-word synced, hand-editable lyric timing. This page provides a 
+	  demonstration of the result and process. See the Github repository for full documentation.</p>
+	<p>
+	  <b><a href="https://www.jonathancoulton.com/">Jonathan Coulton</a> — "Code Monkey"</b> 
+	  is provided under a <a href="https://creativecommons.org/">Creative Commons</a>
+	  license and is used as an example song. Please support the artist.
+	</p>
+	<h3>Contents</h3>
+	  <p>| <a href="#result">Result</a> | <a href="#whisper-vs-mms">Alignment</a> | 
+	  <a href="#screen-elements">Visual Design</a> | <a href="#example-features">Features</a> |
+	  </p>
   </header>
 
   <section id="result">
-    <h2>The result</h2>
-    <p>The final karaoke render: instrumental backing, with each word's letters
-      filling as it's sung.</p>
-    <video controls preload="metadata" playsinline src="media/karaoke.mp4"></video>
-    <p class="caption">Rendered with the shipped default config.</p>
+    <h2>Final Result <a class="top-link" href="#top">Top of page</a></h2>
+    <p>Samples of the final results are shown in the two clips below. The review render provides 
+	the full audio and is used to adjust timing as required. The karaoke render is the final 
+	product, with the vocal audio removed. Click the download links for full versions of the renders.</p>
+    <div class="ab">
+      <figure>
+        <figcaption>Review render, <a href="media/karaoke.review.mp4" download="code-monkey-review.mp4">download</a></figcaption>
+        <video controls preload="metadata" playsinline src="media/clip_intro_review.mp4"></video>
+      </figure>
+      <figure>
+        <figcaption>Karaoke render, <a href="media/karaoke.mp4" download="code-monkey-karaoke.mp4">download</a></figcaption>
+        <video controls preload="metadata" playsinline src="media/clip_intro_karaoke.mp4"></video>
+      </figure>
+    </div>
+    <p class="caption">Rendered with the default
+      <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/config.toml">config</a>.</p>
   </section>
 
   <section id="whisper-vs-mms">
-    <h2>Whisper vs MMS (A/B)</h2>
-    <p>The two aligners time the same words differently. Below is the 113–127 s
-      window ("Code Monkey like you a lot") from each. Play one at a time with
-      sound on: Whisper over-holds the fill on the sustained "lot," while MMS
-      finishes it earlier and moves on, enough to change whether the next line's
-      count-in appears.</p>
+    <h2>Aligner A/B Test (Whisper vs MMS) <a class="top-link" href="#top">Top of page</a></h2>
+    <p>The two aligners time the same words 
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Models.md#ab-whisper-vs-mms_fa">
+	  differently</a>. Below is the 113s–127s window from each. 
+	  <a href="https://github.com/openai/whisper#whisper">Whisper</a> 
+	  over-holds the fill on the sustained "lot," while 
+	  <a href="https://docs.pytorch.org/audio/stable/tutorials/ctc_forced_alignment_api_tutorial.html#ctc-forced-alignment-api-tutorial">MMS</a> 
+	  finishes it earlier and moves on, enough to change whether the 
+	  next line's count-in appears. The <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Example%20Workflow.md#example-workflow">Example Workflow</a> 
+	  documentation details the processing of this song.</p>
     <div class="ab">
       <figure>
         <figcaption>Whisper</figcaption>
@@ -42,32 +67,39 @@
         <video controls preload="metadata" playsinline src="media/clip_113s-127s_mms.mp4"></video>
       </figure>
     </div>
-    <p class="caption">Why two aligners, and when each wins:
-      <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Models.md#ab-whisper-vs-mms_fa">Models → A/B</a>.</p>
+    <p class="caption"><a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Models.md#alignment--two-approaches">Alignment Model docs</a></p>
   </section>
 
-  <section id="on-screen">
-    <h2>What's on screen</h2>
-    <p>Every element below is drawn by the renderer and is configurable
-      (<a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Configuration.md#render">Configuration → <code>[render]</code></a>):</p>
-    <img src="https://cdn.jsdelivr.net/gh/NBPub/karaoke_vid_gen@main/docs/images/code_monkey_final.png"
-         alt="A rendered Code Monkey frame: stacked lyrics with a cyan per-word fill, dimmed already-sung lines, a song progress bar down the right edge, and a left-justified wrapped line.">
-    <ul>
-      <li><strong>Per-word fill:</strong> each letter sweeps to <code>fill_color</code> as it's sung; already-sung lines sit in <code>past_color</code>.</li>
-      <li><strong>Song progress bar:</strong> a persistent bar down the right edge, filling across the track.</li>
-      <li><strong>Title card:</strong> artist / title over the opening, with a lead-in so singing never starts before there's time to read.</li>
-      <li><strong>Count-in dots:</strong> a 3-2-1 before the first line and after long gaps.</li>
-      <li><strong>Wait bar:</strong> a filling bar over long instrumental breaks.</li>
-      <li><strong>Background-vocal words:</strong> backing parts allowed to overlap the lead.</li>
-      <li><strong>Line splitting:</strong> lines too wide for the frame wrap into a left-justified block (below).</li>
-    </ul>
-    <img src="https://cdn.jsdelivr.net/gh/NBPub/karaoke_vid_gen@main/docs/images/code_monkey_countin.png"
-         alt="Count-in dots filling in the few seconds before a line starts.">
-    <p class="caption">Count-in dots before "Code Monkey have every reason."</p>
+  <section id="screen-elements">
+    <h2>Screen Elements <a class="top-link" href="#top">Top of page</a></h2>
+    <p>Example elements below are drawn by the renderer and are configurable via
+      <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Configuration.md#render">Configuration → <code>[render]</code></a>.
+	   Not all elements are shown in the images below or appear in the final render for this song. 
+	   Visual design is also covered in the <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Features.md#rendered-frame-elements">Features</a> 
+	   documentation.</p>
+    <img src="media/screen_elements_1.png"
+         alt="A rendered Code Monkey frame: stacked lyrics with a cyan per-word fill, dimmed already-sung lines, a song progress bar down the right edge, and count-in dots.">
+    <p class="caption">Example visual elements. The fill of the count-in dots is the current word 
+	  fill_color, and the lines above show past_color.</p>
   </section>
 
-  <section id="line-splitting">
-    <h2>Line splitting</h2>
+  <section id="example-features">
+    <h2>Example Features <a class="top-link" href="#top">Top of page</a></h2>
+	<p>A few features are discussed below. Refer to the
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Features.md#features">Features</a> and
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Usage.md#usage">Usage</a> docs
+	  for a comprehensive list and detailed descriptions.</p>
+	<h3>Timing Adjustments</h3>
+	<p>The aligner's output is a first draft. Word timings live in an editable
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Usage.md#timingjson">timing.json</a>,
+	  so a word's start or end can be adjusted by hand and the video re-rendered. For
+	  "Code Monkey" only a handful of small start/end tweaks were needed. Larger
+	  corrections are handled by the
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Usage.md#nudge--hand-correct-timing">nudge</a>
+	  toolkit: coarse shifts, per-line anchors, and marked-line reflow. The
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Example%20Workflow.md#7-check-nudge-and-split">Example Workflow</a>
+	  walks through a full correction pass.</p>
+    <h3>Line Splitting</h3>
     <p>A line too wide for the frame is flagged by the preflight check, then fit by
       <code>karaoke split</code>: balanced into the fewest rows that fit and
       rendered as a left-justified block.</p>
@@ -83,19 +115,26 @@
              alt="The same line wrapped into a left-justified two-row block.">
       </figure>
     </div>
+	<h3>Include Vocals</h3>
+	<p>The <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Models.md#source-separation--demucs">separate</a>
+	  stage splits the song into a vocals-removed instrumental and an isolated vocal stem, and
+	  the karaoke video only plays the instrumental. The original audio can be included
+	  over certain spans: an intro spoken line, a background "woah" hook or echo under a
+	  chorus, an ad-lib you don't want to karaoke. Periods to include can be specified in the
+	  <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Usage.md#no_extracttxt">no_extract</a>
+	  text file
+	  (<a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Features.md#no-extract-intervals">details</a>).</p>
   </section>
 
   <footer class="site-footer">
     <p>Made with
-      <a href="https://github.com/NBPub/karaoke_vid_gen">karaoke_vid_gen</a>
-      (<a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/LICENSE">MIT</a>).
-      Docs:
-      <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Usage.md#usage">Usage</a> ·
-      <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Example%20Workflow.md#example-workflow">Example Workflow</a> ·
-      <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/docs/Models.md#models">Models</a>.</p>
+      <b>karaoke_vid_gen</b>
+	  <a class="gh-link" href="https://github.com/NBPub/karaoke_vid_gen#karaoke-video-generator" aria-label="GitHub repository" title="Repository and docs"><svg viewBox="0 0 16 16" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></a>
+      | <a href="https://github.com/NBPub/karaoke_vid_gen/blob/main/LICENSE">MIT</a>
+	</p>
     <p class="caption">"Code Monkey" by Jonathan Coulton, licensed
       <a href="https://creativecommons.org/licenses/by-nc/3.0/">CC BY-NC 3.0</a>.
-      Not affiliated with, nor endorsed by, the artist.</p>
+    </p>
   </footer>
 
 </main>

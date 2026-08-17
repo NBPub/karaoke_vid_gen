@@ -19,7 +19,12 @@ h1 { margin: 0 0 .5rem; font-size: 1.9rem; }
 h2 {
   margin: 2.5rem 0 .75rem; font-size: 1.4rem;
   border-bottom: 1px solid var(--rule); padding-bottom: .3rem;
+  display: flex; justify-content: space-between; align-items: baseline;
+  flex-wrap: wrap; gap: .5rem;
 }
+.top-link { font-size: .6em; font-weight: 400; text-decoration: none; white-space: nowrap; }
+.gh-link { color: var(--fg); display: inline-block; line-height: 0; vertical-align: middle; }
+.gh-link:hover { color: var(--accent); }
 p { max-width: 68ch; }
 .tagline { color: var(--muted); }
 .caption { color: var(--muted); font-size: .9rem; }
