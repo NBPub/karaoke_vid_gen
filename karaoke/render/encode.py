@@ -1,6 +1,8 @@
 from __future__ import annotations
 import json
+import os
 import subprocess
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import List
@@ -93,19 +95,37 @@ def encode(frame_pattern: str, audio_path: str, out_mp4: str, config: Config,
            lead_in: float = 0.0) -> str:
     reencode = needs_reencode(audio_path) or lead_in > 0
     codec = _video_codec(config)
-    cmd = build_ffmpeg_cmd(frame_pattern, audio_path, out_mp4, config, reencode,
-                           lead_in, video_codec=codec)
+    out_path = Path(out_mp4)
+    # Encode to a sibling temp file, then os.replace() it onto the destination
+    # only on success. An interrupted (Ctrl+C) or failed encode — including the
+    # NVENC->libx264 fallback — then leaves any existing render untouched instead
+    # of overwriting it with a partial file. A same-directory temp keeps the
+    # replace atomic; ffmpeg streams to disk exactly as before (no extra memory).
+    fd, tmp = tempfile.mkstemp(dir=str(out_path.parent),
+                               prefix=f".{out_path.stem}-", suffix=".partial.mp4")
+    os.close(fd)
     try:
-        subprocess.run(cmd, check=True)
-        used = codec
-    except subprocess.CalledProcessError:
-        # An auto-selected NVENC encode can fail on driver/session limits; retry
-        # once on CPU. A user-forced codec is not silently switched.
-        if codec == "h264_nvenc" and config.render.video_codec == "auto":
-            subprocess.run(build_ffmpeg_cmd(frame_pattern, audio_path, out_mp4,
-                                            config, reencode, lead_in,
-                                            video_codec="libx264"), check=True)
-            used = "libx264"
-        else:
-            raise
-    return used
+        cmd = build_ffmpeg_cmd(frame_pattern, audio_path, tmp, config, reencode,
+                               lead_in, video_codec=codec)
+        try:
+            subprocess.run(cmd, check=True)
+            used = codec
+        except subprocess.CalledProcessError:
+            # An auto-selected NVENC encode can fail on driver/session limits;
+            # retry once on CPU. A user-forced codec is not silently switched.
+            if codec == "h264_nvenc" and config.render.video_codec == "auto":
+                subprocess.run(build_ffmpeg_cmd(frame_pattern, audio_path, tmp,
+                                                config, reencode, lead_in,
+                                                video_codec="libx264"), check=True)
+                used = "libx264"
+            else:
+                raise
+        os.replace(tmp, out_mp4)
+        return used
+    except BaseException:
+        # Includes KeyboardInterrupt: drop the partial temp, keep the old render.
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise

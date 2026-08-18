@@ -394,6 +394,52 @@ def test_run_preflight_not_stale_when_review_newer(tmp_path):
     assert not any(f.code == "stale_render" for f in run_preflight(sp, Config(), context="render"))
 
 
+def _out_of_order_timing():
+    return json.dumps({"lines": [
+        {"words": [{"text": "a", "start": 5.0, "end": 6.0}]},
+        {"words": [{"text": "b", "start": 2.0, "end": 3.0}]},
+    ]})
+
+
+def test_run_preflight_out_of_order_errors_in_render_but_warns_in_nudge(tmp_path):
+    """out_of_order blocks a render, but in nudge context it's a (non-halting)
+    warning so the fix can be applied; render stays the hard gate."""
+    sp = _song(tmp_path, timing=_out_of_order_timing(), lyrics="a\nb\n")
+    render_fs = run_preflight(sp, Config(), context="render")
+    assert any(f.code == "out_of_order" and f.severity == ERROR for f in render_fs)
+    assert has_errors(render_fs)
+    nudge_fs = run_preflight(sp, Config(), context="nudge")
+    assert any(f.code == "out_of_order" and f.severity == WARNING for f in nudge_fs)
+    assert not has_errors(nudge_fs)
+
+
+def test_run_preflight_nudge_keeps_structural_errors_halting(tmp_path):
+    """Structural problems (unparseable JSON) still halt nudge — they return before
+    the nudge downgrade, so a broken file can't slip through."""
+    sp = _song(tmp_path, timing='{\n  "start": 0\n  "end": 5\n}\n')  # missing comma
+    assert has_errors(run_preflight(sp, Config(), context="nudge"))
+
+
+def test_run_preflight_timing_path_checks_labeled_file(tmp_path):
+    """timing_path points the check at a labeled A/B timing without disturbing the
+    canonical one."""
+    sp = _song(tmp_path, timing=_good_timing(), lyrics="hello world\n")
+    assert run_preflight(sp, Config(), context="render") == []          # canonical clean
+    labeled = sp.ab_timing("mms")
+    labeled.write_text(_out_of_order_timing(), encoding="utf-8")
+    fs = run_preflight(sp, Config(), context="render", timing_path=labeled)
+    assert any(f.code == "out_of_order" for f in fs) and has_errors(fs)
+
+
+def test_informational_findings_never_raises_on_bad_audio(tmp_path):
+    """informational_findings is best-effort: a probe failure yields [] instead of
+    propagating, so an all/ab report never breaks the run."""
+    from karaoke.preflight import informational_findings
+    sp = _song(tmp_path, timing=_good_timing(), lyrics="hello world\n")
+    sp.song.write_bytes(b"not audio")     # forces audio_duration (ffprobe) to fail
+    assert informational_findings(sp, Config()) == []
+
+
 # --- line-width check (warn to break up lines that run past the window) ---
 
 def test_check_line_widths_flags_only_overflowing_lines():

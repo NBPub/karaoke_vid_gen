@@ -1,3 +1,5 @@
+import pytest
+
 import karaoke.render.encode as encode
 from karaoke.config import Config
 
@@ -84,7 +86,7 @@ def test_build_ffmpeg_cmd_nvenc():
     assert "libx264" not in cmd
 
 
-def test_encode_auto_nvenc_failure_falls_back_to_libx264(monkeypatch):
+def test_encode_auto_nvenc_failure_falls_back_to_libx264(monkeypatch, tmp_path):
     from karaoke.config import Config
     monkeypatch.setattr(encode, "_audio_codec", lambda p: "aac")
     monkeypatch.setattr(encode, "_has_nvenc", lambda: True)   # auto -> nvenc
@@ -99,12 +101,12 @@ def test_encode_auto_nvenc_failure_falls_back_to_libx264(monkeypatch):
         return _Ok()
 
     monkeypatch.setattr(encode.subprocess, "run", fake_run)
-    encode.encode("f/%06d.png", "a.m4a", "o.mp4", Config(), lead_in=0.0)
+    encode.encode("f/%06d.png", "a.m4a", str(tmp_path / "o.mp4"), Config(), lead_in=0.0)
     assert any("h264_nvenc" in c for c in calls)   # tried NVENC
     assert any("libx264" in c for c in calls)      # then fell back
 
 
-def test_encode_delayed_aac_forces_reencode(monkeypatch):
+def test_encode_delayed_aac_forces_reencode(monkeypatch, tmp_path):
     monkeypatch.setattr(encode, "_audio_codec", lambda p: "aac")  # would normally copy
     monkeypatch.setattr(encode, "_has_nvenc", lambda: False)      # libx264 path, no probe
     captured = {}
@@ -114,7 +116,7 @@ def test_encode_delayed_aac_forces_reencode(monkeypatch):
 
     monkeypatch.setattr(encode.subprocess, "run",
                         lambda cmd, **k: captured.setdefault("cmd", cmd) or _Ok())
-    encode.encode("frames/%06d.png", "a.m4a", "o.mp4", Config(), lead_in=1.5)
+    encode.encode("frames/%06d.png", "a.m4a", str(tmp_path / "o.mp4"), Config(), lead_in=1.5)
     assert "aac" in captured["cmd"]
     assert "adelay=1500:all=1" in " ".join(captured["cmd"])
 
@@ -161,3 +163,60 @@ def test_encode_reports_libx264_on_nvenc_fallback(monkeypatch, tmp_path):
     monkeypatch.setattr(encode.subprocess, "run", fake_run)
     used = encode.encode("p/%06d.png", "a.wav", str(tmp_path / "o.mp4"), cfg)
     assert used == "libx264"
+
+
+def test_encode_writes_via_temp_then_replaces(monkeypatch, tmp_path):
+    """A successful encode targets a temp file and atomically replaces the output."""
+    cfg = Config.load(tmp_path / "missing.toml")
+    monkeypatch.setattr(encode, "_video_codec", lambda config: "libx264")
+    monkeypatch.setattr(encode, "needs_reencode", lambda p: False)
+    out = tmp_path / "karaoke.mp4"
+    out.write_bytes(b"OLD")                          # an existing, working render
+
+    def fake_run(cmd, check):
+        dest = cmd[-1]
+        assert dest != str(out)                      # ffmpeg writes a temp, not the final path
+        open(dest, "wb").write(b"NEW")               # simulate a completed encode
+
+    monkeypatch.setattr(encode.subprocess, "run", fake_run)
+    encode.encode("f/%06d.png", "a.m4a", str(out), cfg)
+    assert out.read_bytes() == b"NEW"                # replaced only on success
+    assert not list(tmp_path.glob("*.partial.mp4"))  # temp consumed by the replace
+
+
+def test_encode_failure_leaves_existing_render_untouched(monkeypatch, tmp_path):
+    """A failed encode never clobbers an existing render, and cleans up its temp."""
+    cfg = Config.load(tmp_path / "missing.toml")
+    monkeypatch.setattr(encode, "_video_codec", lambda config: "libx264")  # no NVENC fallback
+    monkeypatch.setattr(encode, "needs_reencode", lambda p: False)
+    out = tmp_path / "karaoke.mp4"
+    out.write_bytes(b"GOOD")
+
+    def boom(cmd, check):
+        open(cmd[-1], "wb").write(b"partial")        # wrote a partial temp...
+        raise encode.subprocess.CalledProcessError(1, cmd)  # ...then failed
+
+    monkeypatch.setattr(encode.subprocess, "run", boom)
+    with pytest.raises(encode.subprocess.CalledProcessError):
+        encode.encode("f/%06d.png", "a.m4a", str(out), cfg)
+    assert out.read_bytes() == b"GOOD"               # existing render preserved
+    assert not list(tmp_path.glob("*.partial.mp4"))  # partial temp removed
+
+
+def test_encode_keyboardinterrupt_leaves_existing_render(monkeypatch, tmp_path):
+    """Ctrl+C mid-encode preserves the existing render and cleans up the temp."""
+    cfg = Config.load(tmp_path / "missing.toml")
+    monkeypatch.setattr(encode, "_video_codec", lambda config: "libx264")
+    monkeypatch.setattr(encode, "needs_reencode", lambda p: False)
+    out = tmp_path / "karaoke.mp4"
+    out.write_bytes(b"GOOD")
+
+    def interrupt(cmd, check):
+        open(cmd[-1], "wb").write(b"partial")
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(encode.subprocess, "run", interrupt)
+    with pytest.raises(KeyboardInterrupt):
+        encode.encode("f/%06d.png", "a.m4a", str(out), cfg)
+    assert out.read_bytes() == b"GOOD"
+    assert not list(tmp_path.glob("*.partial.mp4"))

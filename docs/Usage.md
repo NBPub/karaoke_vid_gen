@@ -172,7 +172,10 @@ Available on every command:
 Press **Ctrl+C** to stop. How quickly it responds depends on the stage:
 
 - **Rendering** and the subprocess stages (**acquire**, **separate**, encode) stop
-  promptly and hand you back the prompt.
+  promptly and hand you back the prompt. A render also writes its output
+  **atomically** — to a temp file swapped in only once the encode finishes — so an
+  interrupted or failed render never overwrites an existing `karaoke.mp4` /
+  `karaoke.review.mp4` with a partial or blank file.
 - **Alignment** (Whisper / MMS) runs a model call on the GPU, and Ctrl+C is not
   delivered until that call returns — so it can take a moment to react. That is
   inherent to the in-process GPU work, not a hang.

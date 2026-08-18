@@ -239,6 +239,46 @@ def test_run_ab_force_bypasses_reuse(tmp_path, monkeypatch):
     assert set(aligned) == {sp.ab_timing("whisper").name, sp.ab_timing("mms").name}  # both
 
 
+def test_run_ab_skips_reuse_when_first_line_seed_differs(tmp_path, monkeypatch, capsys):
+    # cold align recorded (no seed); this A/B run asks for a --first-line hint, so
+    # the pristine timing would not reflect it -> reuse skipped, both re-aligned.
+    sp = _song(tmp_path)
+    sp.timing_json.write_text(_HELLO_WORLD_TIMING, encoding="utf-8")
+    sp.timing_baseline.write_text(_HELLO_WORLD_TIMING, encoding="utf-8")
+    _mark_history(sp, ("align", "whisper"))
+    aligned = []
+    monkeypatch.setattr(pipeline, "_build_aligner", lambda model, cfg: None)
+    monkeypatch.setattr(pipeline.align_mod, "align_song",
+                        lambda v, l, out, a, **kw: (aligned.append(out.name),
+                                                    out.write_text("{}", encoding="utf-8")))
+    monkeypatch.setattr(pipeline, "run_render", lambda sp, cfg, **kw: None)
+
+    pipeline.run_ab(sp, _cfg(), first_line=30.0, render=False)
+
+    assert set(aligned) == {sp.ab_timing("whisper").name, sp.ab_timing("mms").name}
+    assert "first-line seed" in capsys.readouterr().out
+
+
+def test_run_ab_reuses_when_first_line_seed_matches(tmp_path, monkeypatch):
+    # align recorded WITH seed "30.0"; the same --first-line -> pristine arm reused.
+    sp = _song(tmp_path)
+    sp.timing_json.write_text(_HELLO_WORLD_TIMING, encoding="utf-8")
+    sp.timing_baseline.write_text(_HELLO_WORLD_TIMING, encoding="utf-8")
+    sp.history_csv.write_text("op,model,seed\nalign,whisper,30.0\n", encoding="utf-8")
+    aligned = []
+    monkeypatch.setattr(pipeline, "_build_aligner", lambda model, cfg: None)
+    monkeypatch.setattr(pipeline.align_mod, "align_song",
+                        lambda v, l, out, a, **kw: (aligned.append(out.name),
+                                                    out.write_text("{}", encoding="utf-8")))
+    monkeypatch.setattr(pipeline, "run_render", lambda sp, cfg, **kw: None)
+    monkeypatch.setattr(pipeline, "_reuse_initial_render", lambda sp, cfg, m: False)
+
+    pipeline.run_ab(sp, _cfg(), first_line=30.0, render=False)
+
+    assert sp.ab_timing("whisper").read_text(encoding="utf-8") == _HELLO_WORLD_TIMING
+    assert aligned == [sp.ab_timing("mms").name]       # only mms re-aligned
+
+
 def test_reuse_initial_render_full_copies_review(tmp_path, monkeypatch):
     sp = _song(tmp_path)
     sp.timing_json.write_text(
