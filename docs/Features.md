@@ -106,7 +106,7 @@ transitions. This feature can be useful for echoes or call-and-response backing 
 ### Preflight check
 
 A `check` validates `timing.json` (and its neighbouring files) before it's
-used. It runs automatically before `nudge` and `render`. Errors halt and warnings inform, so malformed timing never reaches a render. Messages are 1-indexed with surrounding context.
+used. It runs automatically before `render` (errors halt, so malformed timing never reaches a render) and before `nudge` (there, content errors are reported as non-halting warnings so a nudge can fix them; structural JSON errors still halt). Warnings always inform. Messages are 1-indexed with surrounding context. The initial `all` and `ab` renders are intentionally ungated and instead print a non-halting report of what `check` would flag.
 
 Bypass the preflight check by adding the `--skip-check` option to a command.
 
@@ -155,6 +155,8 @@ The over-wide check is also part of preflight, so you're warned before shipping 
 A per-song `no_extract.txt` lists segments where the karaoke
 instrumental keeps the original mix (vocals included) instead of the vocals-removed audio. It can be used for echoes, ad-libs, or spoken parts you don't want to karaoke. The mix is spliced back over those spans with a short crossfade.
 
+The [Usage](Usage.md#no_extracttxt) doc details how to specify these intervals.
+
 ## Rendered frame elements
 
 Frames use a stacked-lyrics layout with per-word fill. Letters fill by
@@ -193,4 +195,4 @@ render mode, encoder, and wall-time. Cached/skipped stages log nothing. It's a
 human-readable lifecycle record of how a song's timing was produced; toggle it
 on/off in config.
 
-[History log example table](Example%20Workflow.md#the-history-log)
+[History log example table](Example%20Workflow.md#history-log)

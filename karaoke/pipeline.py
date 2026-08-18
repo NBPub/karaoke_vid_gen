@@ -309,14 +309,25 @@ def _timing_matches_lyrics(sp: SongPaths) -> bool:
     return linesplit.words_match(timing, lyrics_lines)
 
 
-def _reuse_initial_arm(sp: SongPaths, cfg: Config, *, render: bool = True) -> str | None:
-    """If the canonical timing is a pristine align (see _reusable_model), its
-    words still match lyrics.txt, and its labeled arm isn't already materialized,
-    seed that arm by copying: the timing always, the render(s) when full-length.
-    Returns the reused model, else None. Canonical files are never modified."""
+def _reuse_initial_arm(sp: SongPaths, cfg: Config, *, first_line=None,
+                       render: bool = True) -> str | None:
+    """If the canonical timing is a pristine align (see _reusable_model), was
+    aligned with the same first-line seed this run requests, its words still match
+    lyrics.txt, and its labeled arm isn't already materialized, seed that arm by
+    copying: the timing always, the render(s) when full-length. Returns the reused
+    model, else None. Canonical files are never modified."""
     import shutil
     m = _reusable_model(sp)
     if m is None or sp.ab_timing(m).exists():
+        return None
+    cur_seed = "" if first_line is None else str(first_line)
+    _, init_seed = history.pristine_align(sp)
+    if cur_seed != init_seed:
+        # The initial align used a different (or no) --first-line hint, so its
+        # timing would not reflect this run's seed — re-align both arms with it.
+        print(f"[ab] the initial {m} alignment used first-line seed "
+              f"'{init_seed or 'none'}', but this run requests '{cur_seed or 'none'}'; "
+              f"re-aligning both models with the current seed.")
         return None
     if not _timing_matches_lyrics(sp):
         # lyrics.txt was edited since the alignment (word change) — the initial
@@ -339,7 +350,7 @@ def run_ab(sp: SongPaths, cfg: Config, *, first_line=None, render=True, force=Fa
     karaoke.review.mp4 — use `ab_keep` to consolidate the chosen one."""
     seed = "" if first_line is None else str(first_line)
     if not force:
-        _reuse_initial_arm(sp, cfg, render=render)
+        _reuse_initial_arm(sp, cfg, first_line=first_line, render=render)
     for model in AB_MODELS:
         tpath = sp.ab_timing(model)
         run_stage(
@@ -370,6 +381,20 @@ def run_ab(sp: SongPaths, cfg: Config, *, first_line=None, render=True, force=Fa
                            "notes": "ab-gen"})
     labeled = ", ".join(sp.ab_timing(m).name for m in AB_MODELS)
     print(f"[ab] generated {labeled}" + (" + videos" if render else ""))
+    # Per-aligner informational preflight. A/B renders are deliberately ungated
+    # (like the initial `all` render), so surface what `check` would flag on each
+    # labeled timing without blocking. Best-effort: never fails the A/B run.
+    from karaoke import preflight
+    for model in AB_MODELS:
+        findings = preflight.informational_findings(
+            sp, cfg, timing_path=sp.ab_timing(model))
+        if findings:
+            print(f"[ab] check ({model}) - informational only; A/B renders are not gated:")
+            print(preflight.format_report(findings))
+        else:
+            print(f"[ab] check ({model}): no issues found.")
+    print("[ab] `check` runs automatically before render/nudge; resolve any errors "
+          "above before finalizing.")
     print(f"[ab] review them, then you MUST run "
           f"karaoke ab \"{sp.root.name}\" --keep {'|'.join(AB_MODELS)} "
           f"before nudging or finalizing.")

@@ -128,6 +128,21 @@ def _post_nudge_report(sp, cfg) -> None:
         click.echo("post-nudge check: no new issues.")
 
 
+def _initial_render_report(sp, cfg) -> None:
+    """After the ungated initial `all` render, print a non-halting preflight
+    report so problems (over-wide lines, lyric artifacts, ...) surface without
+    blocking; `render` remains the hard gate."""
+    from karaoke import preflight
+    findings = preflight.informational_findings(sp, cfg)
+    if findings:
+        click.echo("\ncheck (informational - this initial render is not gated):")
+        click.echo(preflight.format_report(findings))
+        click.echo("`check` runs automatically before `render`/`nudge`; "
+                   "fix any errors above before your final render.")
+    else:
+        click.echo("\ncheck: no issues found.")
+
+
 def _finish_nudge(sp, cfg, old, new, t0, summary, note, idxs) -> None:
     """Shared tail for the mutating nudge ops: back the old timing up to .bak,
     write the new timing, echo `summary`, log a nudge history row with `note`,
@@ -220,6 +235,7 @@ def run_all(song, source, artist, title, first_line, ab, model, songs_dir, confi
     # skipped here (this render is *for* spotting problems); run `check` /
     # `split` / `nudge` before the final render.
     pipeline.run_render(sp, cfg, force=force, confirm_full_outro=_confirm_full_outro)
+    _initial_render_report(sp, cfg)
     outs = ", ".join(out.name for _, out in pipeline.render_targets(sp, cfg, cfg.render.mode))
     click.echo(
         f"Initial render ({cfg.render.mode}): {outs}\n"

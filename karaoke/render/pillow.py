@@ -48,7 +48,18 @@ class PillowRenderer:
                 import multiprocessing as mp
                 n = r.jobs if r.jobs > 0 else (mp.cpu_count() or 1)
                 with mp.Pool(n) as pool:
-                    pool.map(_draw_and_save, tasks, chunksize=16)
+                    # map_async(...).get(timeout) rather than a bare map: a
+                    # blocking map swallows Ctrl+C (the SIGINT isn't delivered
+                    # until it returns), so a render can't be cancelled. The timed
+                    # get() stays interruptible; on Ctrl+C tear the pool down and
+                    # re-raise so the CLI returns to the prompt instead of hanging.
+                    try:
+                        pool.map_async(_draw_and_save, tasks,
+                                       chunksize=16).get(2**31 - 1)
+                    except KeyboardInterrupt:
+                        pool.terminate()
+                        pool.join()
+                        raise
 
             pattern = str(frames_dir / "%06d.png")
             outputs = [encode(pattern, str(audio), str(out_mp4), config,

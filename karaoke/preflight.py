@@ -428,14 +428,19 @@ def check_no_extract_staleness(no_extract_mtime: float,
     return []
 
 
-def run_preflight(sp, cfg, *, context: str) -> list[Finding]:
+def run_preflight(sp, cfg, *, context: str, timing_path=None) -> list[Finding]:
     """Collect all findings for a song's timing.json in the given context
     ('nudge' | 'render' | 'standalone'). Errors halt callers; warnings inform.
     ``cfg`` supplies render settings for config-aware checks (line width); pass
-    None to skip those."""
-    if not sp.timing_json.exists():
-        return [Finding(ERROR, "missing_timing", f"no timing.json at {sp.timing_json}")]
-    text = sp.timing_json.read_text(encoding="utf-8")
+    None to skip those. ``timing_path`` overrides which timing file is checked
+    (default the song's canonical timing.json) — used to check a labeled A/B
+    timing without disturbing the canonical one. In 'nudge' context, non-structural
+    errors are downgraded to warnings so a mutating nudge can proceed to fix them;
+    structural problems (syntax/parse/shape) still halt."""
+    tp = timing_path or sp.timing_json
+    if not tp.exists():
+        return [Finding(ERROR, "missing_timing", f"no timing.json at {tp}")]
+    text = tp.read_text(encoding="utf-8")
 
     syntax = scan_syntax(text)
     if syntax:
@@ -473,7 +478,7 @@ def run_preflight(sp, cfg, *, context: str) -> list[Finding]:
     rendered = [p for p in (sp.output_mp4, sp.review_mp4) if p.exists()]
     if rendered:
         newest = max(p.stat().st_mtime for p in rendered)
-        findings += check_staleness(sp.timing_json.stat().st_mtime, newest)
+        findings += check_staleness(tp.stat().st_mtime, newest)
     if sp.no_extract.exists() and sp.instrumental.exists():
         findings += check_no_extract_staleness(
             sp.no_extract.stat().st_mtime, sp.instrumental.stat().st_mtime)
@@ -490,5 +495,27 @@ def run_preflight(sp, cfg, *, context: str) -> list[Finding]:
             findings += check_count_in_density(
                 data, cfg.render.count_in_min_gap_seconds)
 
+    if context == "nudge":
+        # nudge is the tool for fixing timing, so content problems (out-of-order,
+        # past-song-end, over-wide lines, ...) are reported but must not gate the
+        # op. Structural problems (syntax/parse/shape) returned early above and
+        # still halt. `render` remains the hard gate.
+        for f in findings:
+            if f.severity == ERROR:
+                f.severity = WARNING
+
     attach_context(findings, text)
     return findings
+
+
+def informational_findings(sp, cfg, *, timing_path=None,
+                           drop=("stale_render", "stale_no_extract")) -> list[Finding]:
+    """Best-effort preflight for a non-gating, informational report (e.g. after an
+    `all`/`ab` initial render). Never raises — returns [] if the check itself fails
+    (e.g. ffprobe can't read the audio) — and drops noisy staleness codes that a
+    just-rendered / just-generated song trivially trips."""
+    try:
+        findings = run_preflight(sp, cfg, context="standalone", timing_path=timing_path)
+    except Exception:
+        return []
+    return [f for f in findings if f.code not in drop]

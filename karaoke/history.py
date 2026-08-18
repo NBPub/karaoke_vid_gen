@@ -10,24 +10,38 @@ PROV_FIELDS = ("model", "seed", "source", "whisper_params")
 _MUTATING_OPS = ("align", "nudge", "split", "ab-keep")
 
 
-def _pristine_align_model(rows):
-    """The model of a pristine alignment: the most recent mutating op must be an
-    `align` (returning its model). Any nudge/split/ab-keep after it, or no align
-    at all, returns None. Renders are non-mutating and ignored."""
+def _pristine_align(rows):
+    """The (model, seed) of a pristine alignment: the most recent mutating op must
+    be an `align` (returning its model and recorded first-line seed). Any
+    nudge/split/ab-keep after it, or no align at all, returns (None, ""). Renders
+    are non-mutating and ignored."""
     for row in reversed(rows):
         if row.get("op") in _MUTATING_OPS:
-            return (row.get("model") or None) if row.get("op") == "align" else None
-    return None
+            if row.get("op") == "align":
+                return (row.get("model") or None), (row.get("seed") or "")
+            return None, ""
+    return None, ""
+
+
+def _pristine_align_model(rows):
+    """The model of a pristine alignment (see `_pristine_align`); None otherwise."""
+    return _pristine_align(rows)[0]
+
+
+def pristine_align(sp):
+    """Read the song's history.csv and apply `_pristine_align`. (None, "") when
+    history is missing/disabled. The seed lets callers tell a cold align from a
+    `--first-line`-seeded one so A/B reuse doesn't silently ignore the hint."""
+    path = sp.history_csv
+    if not path.exists():
+        return None, ""
+    with path.open(newline="", encoding="utf-8") as f:
+        return _pristine_align(list(csv.DictReader(f)))
 
 
 def pristine_align_model(sp):
-    """Read the song's history.csv and apply `_pristine_align_model`. None when
-    history is missing/disabled."""
-    path = sp.history_csv
-    if not path.exists():
-        return None
-    with path.open(newline="", encoding="utf-8") as f:
-        return _pristine_align_model(list(csv.DictReader(f)))
+    """The model of a pristine alignment (see `pristine_align`); None otherwise."""
+    return pristine_align(sp)[0]
 
 
 def format_duration(seconds: float) -> str:

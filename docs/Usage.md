@@ -167,6 +167,25 @@ Available on every command:
 
 ---
 
+## Cancelling a run
+
+Press **Ctrl+C** to stop. How quickly it responds depends on the stage:
+
+- **Rendering** and the subprocess stages (**acquire**, **separate**, encode) stop
+  promptly and hand you back the prompt.
+- **Alignment** (Whisper / MMS) runs a model call on the GPU, and Ctrl+C is not
+  delivered until that call returns — so it can take a moment to react. That is
+  inherent to the in-process GPU work, not a hang.
+
+If a run ever seems truly stuck, closing the terminal window is a safe hard stop:
+it terminates the Python process and its child processes (ffmpeg, yt-dlp, Demucs),
+so nothing keeps running in the background. Open a new terminal and re-activate the
+virtual environment to continue — "deactivating" the venv is not needed and does
+not stop anything itself (it only restores your shell's PATH). Finished stages are
+cached, so re-running resumes where you left off.
+
+---
+
 ## `all` — run the whole pipeline
 
 Runs acquire → lyrics → separate → align → render in one pass and ends with an
@@ -178,12 +197,14 @@ rather `all` produce those outputs.
 ```bash
 karaoke all "Artist - Title" "https://www.youtube.com/watch?v=..."   # from a URL
 karaoke all "Artist - Title" "path/to/song.mp3"                      # from a local file
+karaoke all "Artist - Title"                                         # source omitted: resumes an already-acquired song
 ```
 
 - **Prompts only when needed (resume).**
   - `all` prompts for the audio source only when acquire still has to run, and for
     a supplied instrumental (file or URL; blank = AI separation) only when separate
-    still has to run.
+    still has to run. Once a song is acquired the `SOURCE` argument is optional —
+    omit it (third example above) and `all` resumes from the cached stages.
   - on a re-run, finished stages are skipped silently and their prompts don't
     appear, so `all` resumes where it left off (`--force` re-does every stage and
     re-asks).
@@ -301,9 +322,13 @@ lyrics), or the MMS forced aligner (MMS_FA, single-pass CTC). See
 
 Validates `timing.json` and its neighboring files: JSON syntax and structure,
 timing semantics, timing↔lyrics consistency, stale renders, over-wide lines, and
-more. It runs automatically before `nudge` and `render` (errors halt; warnings
-inform; `--skip-check` bypasses). One warning, a stale `no_extract.txt`, is
-interactive at `render`, offering to run `separate` first (see
+more. It runs automatically before `render` (errors halt) and before `nudge`
+(there, content errors are reported as non-halting warnings so a nudge can fix
+them — structural JSON errors still halt); `--skip-check` bypasses either. The
+initial `all` and `ab` renders are intentionally *un*gated — they exist to help you
+spot problems — and instead print a non-halting report of what `check` would flag
+(one report for `all`, one per aligner for `ab`). One warning, a stale
+`no_extract.txt`, is interactive at `render`, offering to run `separate` first (see
 [`render`](#render--make-the-video)). The full list of checks, with severities, is
 in [Features → preflight check](Features.md#preflight-check).
 
@@ -398,9 +423,13 @@ to use your time exactly as given.
 - `--no-snap`
   - use the times you give as-is; skip onset snapping.
 - `--skip-check`
-  - skip the preflight gate that otherwise runs first.
+  - skip the preflight that otherwise runs first (see below).
 
-After any mutating op, `nudge` re-runs the preflight check and 
+`nudge` runs the preflight before the op, but content errors there are reported as
+non-halting **warnings** rather than blocking: a nudge is how you *fix* a timing
+problem (an out-of-order line, a word past the song's end), so the check must not
+stand in the way. Structural JSON errors still stop it, and `render` stays the hard
+gate. After any mutating op, `nudge` re-runs the check and 
 reports (without halting) issues the reflow introduced — e.g. a 
 reflowed line whose end runs past the next line's start — so you catch 
 them before rendering. Background-vocal words (`"bg": true` in 
