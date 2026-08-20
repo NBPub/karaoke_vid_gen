@@ -7,7 +7,7 @@ Provide an audio source (local file or YouTube URL) and song metadata, then auto
  - sync vocal track to lyrics 
  - generate a simple video with timed filling for lyrics
    - "review" video with full audio and "karaoke" video with vocals removed 
-   - hand edit word timings as needed
+   - hand edit word timings as needed, can use helpful [companion tool](https://github.com/NBPub/song_timing_marker#song-timing-marker)
    - utilize other [advanced features](docs/Features.md) for fine-tuning final karaoke video
 
 Read through the [documentation](/docs#documentation) for background details and usage guides. See a demonstration of results, with downloadable video, on the project [webpage](https://nbpub.github.io/karaoke_vid_gen/).
@@ -92,7 +92,8 @@ A **Python CLI** (`karaoke`) built around a five-stage, individually re-runnable
 - **Adjustable timing for word fills**
   - hand-editable `timing.json` (from chosen aligner)
   - `nudge` [toolkit](docs/Usage.md#nudge--hand-correct-timing)
-  - preflight **[`check`](docs/Features.md#preflight-check)**, validates timing, among other things, before every render.
+  - preflight **[`check`](docs/Features.md#preflight-check)**, validates timing, among other things, before every render
+  - separate [companion tool](https://github.com/NBPub/song_timing_marker#song-timing-marker) can be installed and used: a GUI for playing audio files and recording millisecond-resolution timestamps
 - **Rich rendered frames, [configurable](docs/Configuration.md#render) appearance**
   - stacked lyrics with a per-word color fill
   - title card and persistent song progress bar
@@ -112,7 +113,8 @@ A **Python CLI** (`karaoke`) built around a five-stage, individually re-runnable
 
 | Idea | Notes |
 |------|-------|
-| Duet Mode | Alignment and visual design support for songs with multiple singers and separate parts |
+| Duet Mode | Alignment and visual design support for songs with multiple singers and separate parts. Stack parts vertically in video so both are visible |
+| Singer-Designated Colors | Simpler version of Duet Mode, allow different fill colors to be used for separate artists/singers within a song |
 | Playlist / batch processing | Process a whole album/playlist (pairs with batch mode) |
 | Lyric-artifact warnings | Auto-detect [common issues](docs/Usage.md#lyrics--fetch-the-words) with supplied lyrics, such as repeat shortcuts (`(x4)`, `[Chorus]`), and scrape footers before aligning |
 | Faster render iteration | Draft (low-res) render mode; pipe raw frames to FFmpeg stdin |

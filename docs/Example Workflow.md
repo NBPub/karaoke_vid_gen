@@ -245,11 +245,10 @@ aligner (Whisper), such as a smoother-held note or a better-tracked repeat, rena
 
 ## 7. Check, nudge, and split
 
-Validate the timing with [`check`](Usage.md#check--preflight-the-timing) (it also
-runs automatically before `nudge` and `render`), then refine: hand-edit
-`timing.json` or use the [`nudge`](Usage.md#nudge--hand-correct-timing) toolkit for
-timing, and [`split`](Usage.md#split--fit-over-wide-lines) for any line too wide for
-the frame.
+Validate the timing with [`check`](Usage.md#check--preflight-the-timing) (it also runs automatically before `nudge` and `render`), then refine: hand-edit 
+`timing.json` or use the [`nudge`](Usage.md#nudge--hand-correct-timing) toolkit for timing, and [`split`](Usage.md#split--fit-over-wide-lines) for any line too wide for the frame.
+
+The initial MMS alignment for this song worked pretty well, so only hand-edited timings were required. A separate tool, [**Song Timing Marker**](https://github.com/NBPub/song_timing_marker#song-timing-marker), was used to nail down accurate timings for word-starts and word-ends that needed changes.
 
 ### Nudge
 

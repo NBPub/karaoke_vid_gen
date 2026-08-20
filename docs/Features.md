@@ -77,6 +77,8 @@ Word-level timing is an editable JSON file: each line is a list of words with
 reads from it. Because the review video keeps this file's time-base, a timestamp
 read off the video maps straight back into the file.
 
+Accurate timestamps for hand-editing `timing.json` can be determined using [**Song Timing Marker**](https://github.com/NBPub/song_timing_marker#song-timing-marker).
+
 ### `nudge` toolkit
 
 Coarse-to-fine manual correction:
